@@ -17,6 +17,11 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Create logs directory if it doesn't exist
+import os
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -181,3 +186,71 @@ CORS_ALLOWED_ORIGINS = config(
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Security Headers (Production)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_SECURITY_POLICY = {
+    "default-src": ("'self'",),
+    "script-src": ("'self'", "'unsafe-inline'"),
+    "style-src": ("'self'", "'unsafe-inline'"),
+    "img-src": ("'self'", "data:", "https:", "blob:"),
+    "font-src": ("'self'", "data:"),
+}
+
+# Additional Security
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# Logging Configuration
+from logging.handlers import RotatingFileHandler
+import os
+
+LOGS_DIR_CONFIGURED = BASE_DIR / 'logs'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR_CONFIGURED / 'django.log'),
+            'maxBytes': 1024 * 1024 * 5,  # 5MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}

@@ -30,6 +30,7 @@ db.sqlite3
 db.sqlite3-journal
 /media
 /staticfiles
+/logs
 
 # Environment
 .env
@@ -48,5 +49,9 @@ Thumbs.db
 
 # Backup files
 *.bak
+
+# Docker
+.dockerignore
+
 set_admin_password.py
 import_data.py
